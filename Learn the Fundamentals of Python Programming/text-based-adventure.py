@@ -79,7 +79,7 @@ def gameStart():
     story()
     fork_path()
 
-    choice = input('Do you go left or Right? ')
+    choice = input('Do you go left or Right? LEFT or RIGHT ')
     choice = choice.lower()
     if 'left' in choice:
         glowing_clearing()
@@ -92,7 +92,7 @@ def gameStart():
             confrontation()
         elif 'no' in choice:
             escape()
-            choice = input('Do you try your luck with the liquid or keep escaping?').lower()
+            choice = input('Do you try your luck with the liquid or keep escaping? YES or NO').lower()
             if 'yes' in choice:
                 strikeback()
                 return_from_darkness
@@ -107,7 +107,19 @@ def gameStart():
         wrong_choice()
 
     delay_print('Thanks for playing!!!')
-    
 
 
 gameStart()
+
+
+"""
+Things i learnt
+- funtion
+- time module
+- print function (end='', flush=True)
+- for loop
+- conditinals
+- inputs
+- in
+- lower function
+"""
