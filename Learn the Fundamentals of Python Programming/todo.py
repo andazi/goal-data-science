@@ -42,6 +42,7 @@ class Todos():
         self.ind = ind
         if (self.ind <= len(self.todo_list)) and (self.ind >= 0):
             self.ind -= 1
+            print(f'{self.todo_list[self.ind]} =>is now complete')
             self.completed_list.append(self.todo_list[self.ind])
             self.todo_list.pop(self.ind)
         else:
@@ -59,8 +60,13 @@ class Todos():
         
 chrisTodos = Todos()
 
-chrisTodos.add('Write 62 lins of python code')
+chrisTodos.add('Write 62 lines of python code')
 chrisTodos.add('Git push my codes to guthub')
 chrisTodos.add('Watch kdrama before sleeping')
+chrisTodos.add('Cook fanatastic meal')
+
+chrisTodos.show()
+
+chrisTodos.complete(1)
 
 chrisTodos.show()
