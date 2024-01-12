@@ -1,0 +1,11 @@
+product_Id,product,quantity,price,total
+100,iPhone,1,1000,1000
+101,iPad,2,800,1600
+102,MacBook Pro,11,1500,16500
+103,Apple Watch,4,300,1200
+104,AirPods,5,200,1000
+105,Apple TV,6,200,1200
+106,HomePod,7,300,2100
+107,Beats Headphones,8,250,2000
+108,Apple Pencil,9,100,900
+109,Magic Mouse,10,100,1000
