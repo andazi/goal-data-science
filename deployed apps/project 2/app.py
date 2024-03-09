@@ -11,7 +11,7 @@ import streamlit as st
 # define functions
 
 # load data
-@st.cache # loads this function once and doesn't reload everytime we reload our page
+@st.cache_resource # loads this function once and doesn't reload everytime we reload our page
 def load_data():
 
     # load data
@@ -58,7 +58,7 @@ def load_data():
 
     # create dataframe
     return df_vid, df_agg, df_agg_sub, df_com
-    
+
 df_vid, df_agg, df_agg_sub, df_com = load_data()
 
 
@@ -68,6 +68,10 @@ df_vid, df_agg, df_agg_sub, df_com = load_data()
 ## percent change
 
 # build dashboard
+
+# sidebar
+add_sidebar = st.sidebar.selectbox("Aggregate or Individual Video", ("Aggregate Metrics", "Individual Video Analysis"))
+
 ## local picture
 ## individual video
 
