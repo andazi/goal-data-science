@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
 import streamlit as st
+from pandas.tseries.offsets import DateOffset
 
 
 # define functions
@@ -63,6 +64,23 @@ df_vid, df_agg, df_agg_sub, df_com = load_data()
 
 
 # engineer data
+
+# aggregated differential 
+
+# create a copy of our dataframe
+df_agg_diff = df_agg.copy()
+
+# for the last 12 months, most recently date back to 12 months
+metric_date_12mo = df_agg_diff['VIDEO PUBLISH TIME'].max() - DateOffset(months=12)
+
+# dataframe from metric_date_12mo to df_agg_diff['VIDEO PUBLISH TIME'].max()
+# that is, from 12 months early to current date
+
+df_agg_diff_12mo = df_agg_diff[df_agg_diff['VIDEO PUBLISH TIME'] >= metric_date_12mo]
+
+# median 
+median_agg = df_agg_diff_12mo[df_agg_diff_12mo.columns[2:]].median()
+
 ## what metrics wil be relevant
 ## difference from baseline
 ## percent change
@@ -73,6 +91,87 @@ df_vid, df_agg, df_agg_sub, df_com = load_data()
 add_sidebar = st.sidebar.selectbox("Aggregate or Individual Video", ("Aggregate Metrics", "Individual Video Analysis"))
 
 ## local picture
+if add_sidebar == "Aggregate Metrics":
+
+    metric_agg = df_agg[[
+        'VIDEO PUBLISH TIME',
+        'COMMENTS ADDED', 
+        'SHARES', 
+        'DISLIKES', 
+        'LIKES', 
+        'SUBSCRIBERS GAINED', 
+        'RPM (USD)', 
+        'VIEWS', 
+        'YOUR ESTIMATED REVENUE (USD)',
+        'AVERAGE VIEW SECONDS', 
+        'ENGAGEMENT RATIO', 
+        'VIEW TO SUBSCRIBER RATIO',
+    ]]  
+
+    def metric_median(n):
+        # date range
+        metric_date_n = metric_agg['VIDEO PUBLISH TIME'].max() - DateOffset(months=n)
+        median_date_n = metric_agg[metric_agg['VIDEO PUBLISH TIME'] >= metric_date_n].median()
+        
+        return metric_date_n,median_date_n
+
+    metric_12mo, median_12mo = metric_median(12)
+    metric_6mo, median_6mo = metric_median(6)
+
+    col1, col2, col3,col4,col5,col6 = st.columns(6)
+    columns = [col1, col2, col3,col4,col5,col6]
+
+    count = 0
+    for i in median_6mo.index:
+        with columns[count]:
+            if i != 'VIDEO PUBLISH TIME':
+                delta = (median_6mo[i] - median_12mo[i])/median_12mo[i]
+                st.metric(label = i, value =round(median_6mo[i]), delta="{:.2%}".format(delta))
+            else:
+                delta = median_6mo[i] - median_12mo[i]
+                st.metric(label = 'Duration', value = delta.days, delta=f"{(delta//30)} Months")
+            count += 1
+            if count >= 6:
+                count = 0
+
+
+    df_agg_diff_final = df_agg_diff.loc[:,[
+    'VIDEO',
+    'VIDEO TITLE',
+    'VIDEO PUBLISH TIME',
+    'COMMENTS ADDED',
+    'SHARES',
+    'DISLIKES',
+    'LIKES',
+    'SUBSCRIBERS LOST',
+    'SUBSCRIBERS GAINED',
+    'VIEWS',
+    'SUBSCRIBERS',
+    'YOUR ESTIMATED REVENUE (USD)',
+    'IMPRESSIONS',
+    'IMPRESSIONS CLICK-THROUGH RATE (%)',
+    'AVERAGE VIEW DURATION',
+    'AVERAGE VIEW SECONDS',
+    'ENGAGEMENT RATIO',
+    'VIEW TO SUBSCRIBER RATIO',
+    'VIEW TO SUBSCRIBER LOST RATIO']
+    ]
+    
+    # extract only date
+    df_agg_diff_final['VIDEO PUBLISH TIME'] = df_agg_diff_final['VIDEO PUBLISH TIME'].dt.date
+
+    # rename column
+
+    df_agg_diff_final.rename(columns={'VIDEO PUBLISH TIME': 'PUBLISH DATE'}, inplace=True)
+
+    # extracting time
+    df_agg_diff_final['AVERAGE VIEW DURATION'] = df_agg_diff_final['AVERAGE VIEW DURATION'].dt.time
+
+
+    st.dataframe(df_agg_diff_final)
+
+elif add_sidebar =="Individual Video Analysis":
+    st.write('Ind')
 ## individual video
 
 # improvement
