@@ -109,7 +109,7 @@ if add_sidebar == "Aggregate Metrics":
     ]]  
 
     def metric_median(n):
-        # 
+        # date range
         metric_date_n = metric_agg['VIDEO PUBLISH TIME'].max() - DateOffset(months=n)
         median_date_n = metric_agg[metric_agg['VIDEO PUBLISH TIME'] >= metric_date_n].median()
         
@@ -124,12 +124,51 @@ if add_sidebar == "Aggregate Metrics":
     count = 0
     for i in median_6mo.index:
         with columns[count]:
-            delta = (median_6mo[i] - median_12mo[i])/median_12mo[i]
-            st.metric(lable = i, value =round(median_12mo[i], 2), delta="{:.2%}".format(delata))
+            if i != 'VIDEO PUBLISH TIME':
+                delta = (median_6mo[i] - median_12mo[i])/median_12mo[i]
+                st.metric(label = i, value =round(median_6mo[i]), delta="{:.2%}".format(delta))
+            else:
+                delta = median_6mo[i] - median_12mo[i]
+                st.metric(label = 'Duration', value = delta.days, delta=f"{(delta//30)} Months")
             count += 1
             if count >= 6:
                 count = 0
 
+
+    df_agg_diff_final = df_agg_diff.loc[:,[
+    'VIDEO',
+    'VIDEO TITLE',
+    'VIDEO PUBLISH TIME',
+    'COMMENTS ADDED',
+    'SHARES',
+    'DISLIKES',
+    'LIKES',
+    'SUBSCRIBERS LOST',
+    'SUBSCRIBERS GAINED',
+    'VIEWS',
+    'SUBSCRIBERS',
+    'YOUR ESTIMATED REVENUE (USD)',
+    'IMPRESSIONS',
+    'IMPRESSIONS CLICK-THROUGH RATE (%)',
+    'AVERAGE VIEW DURATION',
+    'AVERAGE VIEW SECONDS',
+    'ENGAGEMENT RATIO',
+    'VIEW TO SUBSCRIBER RATIO',
+    'VIEW TO SUBSCRIBER LOST RATIO']
+    ]
+    
+    # extract only date
+    df_agg_diff_final['VIDEO PUBLISH TIME'] = df_agg_diff_final['VIDEO PUBLISH TIME'].dt.date
+
+    # rename column
+
+    df_agg_diff_final.rename(columns={'VIDEO PUBLISH TIME': 'PUBLISH DATE'}, inplace=True)
+
+    # extracting time
+    df_agg_diff_final['AVERAGE VIEW DURATION'] = df_agg_diff_final['AVERAGE VIEW DURATION'].dt.time
+
+
+    st.dataframe(df_agg_diff_final)
 
 elif add_sidebar =="Individual Video Analysis":
     st.write('Ind')
