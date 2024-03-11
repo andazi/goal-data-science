@@ -90,6 +90,20 @@ median_agg = df_agg_diff_12mo[df_agg_diff_12mo.columns[2:]].median()
 # sidebar
 add_sidebar = st.sidebar.selectbox("Aggregate or Individual Video", ("Aggregate Metrics", "Individual Video Analysis"))
 
+# styling dataframe
+def styling_positive(value, props):
+    try:
+        return props if value >= 0 else None
+    except:
+        pass
+
+
+def styling_negative(value, props):
+    try:
+        return props if value < 0 else None
+    except:
+        pass
+
 ## local picture
 if add_sidebar == "Aggregate Metrics":
 
@@ -168,10 +182,18 @@ if add_sidebar == "Aggregate Metrics":
     df_agg_diff_final['AVERAGE VIEW DURATION'] = df_agg_diff_final['AVERAGE VIEW DURATION'].dt.time
 
 
-    st.dataframe(df_agg_diff_final)
+    # formating each data to percentage
+    
+
+    st.dataframe(df_agg_diff_final.style.hide().applymap(styling_positive, props = 'color:green;').applymap(styling_negative, props = 'color:red;'))
 
 elif add_sidebar =="Individual Video Analysis":
     st.write('Ind')
+
+
 ## individual video
 
 # improvement
+
+# styling
+
