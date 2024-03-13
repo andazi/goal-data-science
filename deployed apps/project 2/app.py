@@ -181,15 +181,43 @@ if add_sidebar == "Aggregate Metrics":
     # extracting time
     df_agg_diff_final['AVERAGE VIEW DURATION'] = df_agg_diff_final['AVERAGE VIEW DURATION'].dt.time
 
-
-    # formating each data to percentage
     
+    if st.button('switch percentage'):
 
-    st.dataframe(df_agg_diff_final.style.hide().map(styling_positive, props = 'color:green;').map(styling_negative, props = 'color:red;'))
+        # Select only the numeric columns
+        numeric_columns = df_agg_diff_final.select_dtypes(include=['number'])
+
+        # Calculate column sums
+        column_sums = numeric_columns.sum()
+
+        # Divide each element by its column sum and multiply by 100 to get percentages
+        df_percentage = (numeric_columns / column_sums) * 100
+
+        # Round the percentages to 2 decimal places
+        df_percentage = df_percentage.round(4)
+
+        # Include the previously excluded non-numeric columns
+        non_numeric_columns = df_agg_diff_final.select_dtypes(exclude=['number'])
+
+        # Concatenate numeric and non-numeric columns
+        df_agg_diff_final = pd.concat([non_numeric_columns, df_percentage], axis=1)
+
+        
+        st.dataframe(df_agg_diff_final.style.hide().map(styling_positive, props = 'color:green;').map(styling_negative, props = 'color:red;'))
+   
+    else:
+       # 
+        st.dataframe(df_agg_diff_final.style.hide().map(styling_positive, props = 'color:green;').map(styling_negative, props = 'color:red;'))
 
 elif add_sidebar =="Individual Video Analysis":
-    st.write('Ind')
 
+    if "counter" not in st.session_state:
+        st.session_state.counter = 0
+
+    st.session_state.counter += 1
+
+    st.header(f"This page has run {st.session_state.counter} times.")
+    st.button("Run it again")
 
 ## individual video
 
