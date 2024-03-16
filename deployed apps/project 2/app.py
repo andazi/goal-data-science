@@ -274,7 +274,7 @@ elif add_sidebar =="Individual Video Analysis":
     # numeric columns
     #df_diff_time.describe().columns
 
-    df_diff_time
+    #df_diff_time
 
     read_selected_video = df_diff_time[df_diff_time == selected_video]
 
@@ -285,12 +285,13 @@ elif add_sidebar =="Individual Video Analysis":
     count = 0
     for i in df_diff_time.describe().columns:
         with columns[count]:
-            st.metric(label = i.replace('_', ' '), value=df_diff_time[i].count())
+            st.metric(label = i, value=df_diff_time[i].count())
             count += 1
     
     
         continue
     st.dataframe(df_diff_time.describe())
+    st.dataframe(read_selected_video)
        
     # improvement
 
