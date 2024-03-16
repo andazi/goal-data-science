@@ -64,12 +64,24 @@ def load_data():
     df_vid['DATE'] = pd.to_datetime(df_vid['DATE'], format='mixed')
 
     df_com['DATE'] = pd.to_datetime(df_com['DATE'])
+    df_com.rename(columns={'VIDID':'VIDEO'}, inplace=True)
 
     # create dataframe
     return df_vid, df_agg, df_agg_sub, df_com
 
-df_vid, df_agg, df_agg_sub, df_com = load_data()
+df_vid, df_agg, df_agg_sub, df_time = load_data()
 
+# country code naming
+def audience_sample(country):
+    # top countries
+    if country == 'US':
+        return 'USA'
+    elif country == 'IN':
+        return 'INDIA'
+    elif country == 'CI':
+        return 'CHINA'
+    else:
+        return 'OTHERS'
 
 # engineer data
 
@@ -78,21 +90,17 @@ df_vid, df_agg, df_agg_sub, df_com = load_data()
 # create a copy of our dataframe
 df_agg_diff = df_agg.copy()
 
+def duration_month():
+    # duration of data
 
-# for the last 12 months, most recently date back to 12 months
-metric_date_12mo = df_agg_diff['PUBLISH DATE'].max() - DateOffset(months=12)
+    max_month = (df_agg_diff['PUBLISH DATE'] - df_agg_diff['PUBLISH DATE']) 
 
-# dataframe from metric_date_12mo to df_agg_diff['VIDEO PUBLISH TIME'].max()
-# that is, from 12 months early to current date
+    data_duration = st.sidebar.slider(
+        'Duration of data',
+        3,56,3
+        )
+    return data_duration
 
-df_agg_diff_12mo = df_agg_diff[df_agg_diff['PUBLISH DATE'] >= metric_date_12mo]
-
-# median 
-median_agg = df_agg_diff_12mo[df_agg_diff_12mo.columns[2:]].median()
-
-## what metrics wil be relevant
-## difference from baseline
-## percent change
 
 # build dashboard
 
@@ -131,28 +139,32 @@ if add_sidebar == "Aggregate Metrics":
         'VIEW TO SUBSCRIBER RATIO',
     ]]  
 
-    def metric_median(n):
+    # duration
+    n_month = duration_month()
+
+    st.header(f'Aggregated data ')
+
+    def metric_median(n_month):
         # date range
-        metric_date_n = metric_agg['PUBLISH DATE'].max() - DateOffset(months=n)
+        metric_date_n = metric_agg['PUBLISH DATE'].max() - DateOffset(months=n_month)
         median_date_n = metric_agg[metric_agg['PUBLISH DATE'] >= metric_date_n].median()
         
         return metric_date_n,median_date_n
 
-    metric_12mo, median_12mo = metric_median(12)
-    metric_6mo, median_6mo = metric_median(6)
+    metric_nmo, median_nmo = metric_median(n_month)
 
     col1, col2, col3,col4,col5,col6 = st.columns(6)
     columns = [col1, col2, col3,col4,col5,col6]
 
     count = 0
-    for i in median_6mo.index:
+    for i in median_nmo.index:
         with columns[count]:
             if i != 'PUBLISH DATE':
-                delta = (median_6mo[i] - median_12mo[i])/median_12mo[i]
-                st.metric(label = i, value =round(median_6mo[i]), delta="{:.4%}".format(delta))
+                delta = (median_nmo[i] - median_nmo[i])/median_nmo[i]
+                st.metric(label = i, value =round(median_nmo[i]), delta="{:.4%}".format(delta))
             else:
-                delta = median_6mo[i] - median_12mo[i]
-                st.metric(label = 'Duration', value = delta.days, delta=f"{(delta//30)} Months")
+                delta = median_nmo[i] - median_nmo[i]
+                st.metric(label = 'Months range', value = n_month, delta=f"{round((n_month/12),2)} years")
             count += 1
             if count >= 6:
                 count = 0
@@ -188,7 +200,7 @@ if add_sidebar == "Aggregate Metrics":
 
     # table
     table_sidebar = st.sidebar.selectbox("Count or percentage", ("Count values", "Percentage value"))
-    
+
     if table_sidebar != 'Count values':
 
         # Select only the numeric columns
@@ -221,26 +233,66 @@ if add_sidebar == "Aggregate Metrics":
         # Concatenate numeric and non-numeric columns
         #df_agg_diff_final = pd.concat([non_numeric_columns, df_percentage], axis=1)
 
-        
+        st.title('Percentage Value')
         st.dataframe(df_agg_diff_final.style.hide().map(styling_positive, props = 'color:green;').map(styling_negative, props = 'color:red;').format(df_to_percent))
    
     else:
-       # 
+        st.title('Count value')
         st.dataframe(df_agg_diff_final.style.hide().map(styling_positive, props = 'color:green;').map(styling_negative, props = 'color:red;'))
 
-elif add_sidebar =="Individual Video Analysis":
-
-    if "counter" not in st.session_state:
-        st.session_state.counter = 0
-
-    st.session_state.counter += 1
-
-    st.header(f"This page has run {st.session_state.counter} times.")
-    st.button("Run it again")
 
 ## individual video
 
-# improvement
+elif add_sidebar =="Individual Video Analysis":
+
+    # videos title list
+    video_title = tuple(df_agg['VIDEO TITLE'])
+    # select videos
+    selected_video = st.selectbox("Select Video", video_title)
+    # filtered by title
+    filtered_video = df_agg[df_agg['VIDEO TITLE'] == selected_video]
+
+    # subscribers filter
+    filtered_agg_sub = df_agg_sub[df_agg_sub['VIDEO TITLE'] == selected_video]
+        
+    filtered_agg_sub['COUNTRY'] = filtered_agg_sub['COUNTRY CODE'].apply(audience_sample)
+
+    filtered_agg_sub.sort_values(by='IS SUBSCRIBED', inplace=True)
+
+    # map
+
+    fig = px.bar(filtered_agg_sub, x='VIEWS', y = 'IS SUBSCRIBED', color = 'COUNTRY', orientation = 'h')
+    st.plotly_chart(fig)
+
+    # individual video dataset
+    df_diff_time = pd.merge(left = df_time, right = df_agg.loc[:, ['VIDEO TITLE','VIDEO', 'PUBLISH DATE', 'SHARES']], how = 'inner')
+    df_diff_time = pd.merge(left = df_diff_time, right = df_agg_sub.loc[:, ['VIDEO TITLE','EXTERNAL VIDEO ID']], how = 'inner')
+    df_diff_time.dropna(inplace=True)
+
+    filtered_agg_sub
+
+    # numeric columns
+    #df_diff_time.describe().columns
+
+    df_diff_time
+
+    read_selected_video = df_diff_time[df_diff_time == selected_video]
+
+    col1,col2,col3,col4 = st.columns(4)
+
+    columns = [col1,col2,col3,col4]
+
+    count = 0
+    for i in df_diff_time.describe().columns:
+        with columns[count]:
+            st.metric(label = i.replace('_', ' '), value=df_diff_time[i].count())
+            count += 1
+    
+    
+        continue
+    st.dataframe(df_diff_time.describe())
+       
+    # improvement
 
 # styling
 
