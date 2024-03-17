@@ -32,8 +32,8 @@ def load_data():
     # remove \xad
     df_agg.columns = df_agg.columns.str.replace('\xad','')
 
-    # drop Nan value
-    df_agg.dropna(inplace=True)
+    # cleaning  val
+    df_agg = df_agg.replace([np.inf, -np.inf], np.nan).dropna()
 
     # convert date to datetype
 
@@ -66,10 +66,13 @@ def load_data():
     df_com['DATE'] = pd.to_datetime(df_com['DATE'])
     df_com.rename(columns={'VIDID':'VIDEO'}, inplace=True)
 
+    # removing '_'
+    df_com.columns = df_com.columns.str.replace('_', ' ')
+
     # create dataframe
     return df_vid, df_agg, df_agg_sub, df_com
 
-df_vid, df_agg, df_agg_sub, df_time = load_data()
+df_vid, df_agg, df_agg_sub, df_com = load_data()
 
 # country code naming
 def audience_sample(country):
@@ -96,7 +99,7 @@ def duration_month():
     max_month = (df_agg_diff['PUBLISH DATE'] - df_agg_diff['PUBLISH DATE']) 
 
     data_duration = st.sidebar.slider(
-        'Duration of data',
+        'Range of Data in months',
         3,56,3
         )
     return data_duration
@@ -259,41 +262,37 @@ elif add_sidebar =="Individual Video Analysis":
 
     filtered_agg_sub.sort_values(by='IS SUBSCRIBED', inplace=True)
 
+    # converting boolean to int
+    filtered_agg_sub['IS SUBSCRIBED'] = filtered_agg_sub['IS SUBSCRIBED'].astype('int')
+
     # map
 
     fig = px.bar(filtered_agg_sub, x='VIEWS', y = 'IS SUBSCRIBED', color = 'COUNTRY', orientation = 'h')
     st.plotly_chart(fig)
 
-    # individual video dataset
-    df_diff_time = pd.merge(left = df_time, right = df_agg.loc[:, ['VIDEO TITLE','VIDEO', 'PUBLISH DATE', 'SHARES']], how = 'inner')
-    df_diff_time = pd.merge(left = df_diff_time, right = df_agg_sub.loc[:, ['VIDEO TITLE','EXTERNAL VIDEO ID']], how = 'inner')
-    df_diff_time.dropna(inplace=True)
+    ind_col = filtered_agg_sub.loc[:,[
+        'VIDEO LENGTH', 
+        'VIEWS', 
+        'VIDEO LIKES ADDED', 
+        'VIDEO DISLIKES ADDED', 
+        'USER SUBSCRIPTIONS ADDED',
+        'AVERAGE WATCH TIME', 
+        'USER COMMENTS ADDED']
+    ]
 
-    filtered_agg_sub
-
-    # numeric columns
-    #df_diff_time.describe().columns
-
-    #df_diff_time
-
-    read_selected_video = df_diff_time[df_diff_time == selected_video]
-
-    col1,col2,col3,col4 = st.columns(4)
-
-    columns = [col1,col2,col3,col4]
+    col1, col2, col3,col4,col5,col6,col7 = st.columns(7)
+    columns = [col1, col2, col3,col4,col5,col6,col7]
 
     count = 0
-    for i in df_diff_time.describe().columns:
+    for i in ind_col.index:
         with columns[count]:
-            st.metric(label = i, value=df_diff_time[i].count())
+            if i not in ['VIDEO LENGTH', 'AVERAGE WATCH TIME']:               
+                st.metric(label = i, value =round(ind_col[i].sum(), 2))
+            else:
+                st.metric(label = i, value = ind_col[i].mean())
             count += 1
-    
-    
-        continue
-    st.dataframe(df_diff_time.describe())
-    st.dataframe(read_selected_video)
-       
-    # improvement
+            if count >= 6:
+                count = 0
 
-# styling
+    st.dataframe(filtered_agg_sub.describe())
 
