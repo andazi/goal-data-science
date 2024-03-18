@@ -280,19 +280,27 @@ elif add_sidebar =="Individual Video Analysis":
         'USER COMMENTS ADDED']
     ]
 
+    ind_col.rename(columns={
+        'VIDEO LIKES ADDED' : 'LIKES', 
+        'VIDEO DISLIKES ADDED' : 'DISLIKES', 
+        'USER SUBSCRIPTIONS ADDED' : 'SUBSCRIPTIONS',
+        'USER COMMENTS ADDED' : 'COMMENTS'
+        }, inplace = True)
+
     col1, col2, col3,col4,col5,col6,col7 = st.columns(7)
     columns = [col1, col2, col3,col4,col5,col6,col7]
 
     count = 0
-    for i in ind_col.index:
+    for i in ind_col.columns:
         with columns[count]:
-            if i not in ['VIDEO LENGTH', 'AVERAGE WATCH TIME']:               
-                st.metric(label = i, value =round(ind_col[i].sum(), 2))
+            if i not in ['VIDEO LENGTH', 'AVERAGE WATCH TIME']:        
+                delta = round(ind_col[i].sum())       
+                st.metric(label = i, value = delta)
             else:
-                st.metric(label = i, value = ind_col[i].mean())
+                delta = ind_col[i].mean()
+                st.metric(label = i, value = delta )
             count += 1
-            if count >= 6:
-                count = 0
+            continue
 
     st.dataframe(filtered_agg_sub.describe())
 
