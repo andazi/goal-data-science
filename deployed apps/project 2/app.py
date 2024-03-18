@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+import seaborn as sns
+import matplotlib.pyplot as plt
 from datetime import datetime
 import streamlit as st
 from pandas.tseries.offsets import DateOffset
@@ -262,14 +264,14 @@ elif add_sidebar =="Individual Video Analysis":
 
     filtered_agg_sub.sort_values(by='IS SUBSCRIBED', inplace=True)
 
+    # vid data
+    filtered_vid = filtered_agg_sub['EXTERNAL VIDEO ID'].unique()[0]
+    df_com_filtered = df_com[df_com['VIDEO'] == filtered_vid ]
+
     # converting boolean to int
-    filtered_agg_sub['IS SUBSCRIBED'] = filtered_agg_sub['IS SUBSCRIBED'].astype('int')
+    #filtered_agg_sub['IS SUBSCRIBED'] = filtered_agg_sub['IS SUBSCRIBED'].astype('int')
 
-    # map
-
-    fig = px.bar(filtered_agg_sub, x='VIEWS', y = 'IS SUBSCRIBED', color = 'COUNTRY', orientation = 'h')
-    st.plotly_chart(fig)
-
+    # metric column
     ind_col = filtered_agg_sub.loc[:,[
         'VIDEO LENGTH', 
         'VIEWS', 
@@ -280,6 +282,20 @@ elif add_sidebar =="Individual Video Analysis":
         'USER COMMENTS ADDED']
     ]
 
+    # sidebar to select columns to plot
+    x_chart = st.sidebar.selectbox(
+        'Select plot values against Subscribers',
+        ind_col.columns[1:]
+    )
+
+    st.title(f'Plot of Subscribers and non-subscribers and their interaction on Video: {x_chart}')
+    # plot in plotly
+    fig = px.bar(filtered_agg_sub, x=x_chart, y = 'IS SUBSCRIBED', color = 'COUNTRY', orientation = 'h')
+    st.plotly_chart(fig)
+
+    st.title('Summary of Video Engagement')
+
+    # metric column renaming
     ind_col.rename(columns={
         'VIDEO LIKES ADDED' : 'LIKES', 
         'VIDEO DISLIKES ADDED' : 'DISLIKES', 
@@ -293,14 +309,17 @@ elif add_sidebar =="Individual Video Analysis":
     count = 0
     for i in ind_col.columns:
         with columns[count]:
-            if i not in ['VIDEO LENGTH', 'AVERAGE WATCH TIME']:        
+            if i == 'COMMENTS':
+                delta = df_com_filtered[i].count()
+                st.metric(label = i, value = delta)
+            elif i not in ['VIDEO LENGTH', 'AVERAGE WATCH TIME']:        
                 delta = round(ind_col[i].sum())       
                 st.metric(label = i, value = delta)
             else:
                 delta = ind_col[i].mean()
                 st.metric(label = i, value = delta )
             count += 1
-            continue
 
-    st.dataframe(filtered_agg_sub.describe())
+    st.title('Video comprehensive interactions')
+    st.dataframe(df_com_filtered)
 
