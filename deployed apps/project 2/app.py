@@ -219,24 +219,10 @@ if add_sidebar == "Aggregate Metrics":
         column_sums = numeric_columns.sum()
 
         # Divide each element by its column sum and multiply by 100 to get percentages and round
-        #df_agg_diff_final = numeric_columns.applymap(lambda val: ((val / column_sums) * 100).round(4))
 
         df_to_percent = {}
         for i in numeric_columns:
             df_to_percent[i] = '{:.1%}'.format
-            
-
-
-        # Divide each element by its column sum and multiply by 100 to get percentages and round
-        #df_percentage = (((numeric_columns / column_sums) * 100).round(4)).astype(str) + '%'
-
-
-
-        # Include the previously excluded non-numeric columns
-        #non_numeric_columns = df_agg_diff_final.select_dtypes(exclude=['number'])
-
-        # Concatenate numeric and non-numeric columns
-        #df_agg_diff_final = pd.concat([non_numeric_columns, df_percentage], axis=1)
 
         st.title('Percentage Value')
         st.dataframe(df_agg_diff_final.style.hide().map(styling_positive, props = 'color:green;').map(styling_negative, props = 'color:red;').format(df_to_percent))
@@ -323,3 +309,17 @@ elif add_sidebar =="Individual Video Analysis":
     st.title('Video comprehensive interactions')
     st.dataframe(df_com_filtered)
 
+
+#### support
+
+with st.sidebar:
+    st.markdown('''
+    
+    
+    🌟  If you've enjoyed my work and would like to support me, 
+    consider buying me a coffee!    
+    Your generosity keeps me inspired and fuels my creativity. 
+    Thank you for being a part of my journey. ☕️💫
+    ''')
+
+    st.markdown('[Support me on Ko-fi](https://ko-fi.com/onscript)')
